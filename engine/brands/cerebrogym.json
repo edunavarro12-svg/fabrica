@@ -1,0 +1,38 @@
+{
+  "id": "cerebrogym",
+  "name": "Cerebro Gym",
+  "handle": "@cerebrogym.es",
+  "accounts": {
+    "youtube": "@CerebroGym",
+    "instagram": "cerebrogym.es",
+    "tiktok": "cerebro.gym"
+  },
+  "language": "es-ES",
+  "niche": "brain training: retos mentales que el espectador juega en el momento",
+  "style": {
+    "background": [
+      "#140c36",
+      "#3a126e"
+    ],
+    "text": "#ffffff",
+    "accent": "#ffd400",
+    "good": "#2ee59d",
+    "bad": "#ff4d6d",
+    "font_bold": "Montserrat-Black.ttf",
+    "font_body": "Montserrat-ExtraBold.ttf",
+    "font_small": "Montserrat-SemiBold.ttf"
+  },
+  "formats": [
+    "stroop",
+    "memoria",
+    "encuentra"
+  ],
+  "daily_target": 4,
+  "publisher": "official_apis",
+  "voice": "es-ES-AlvaroNeural",
+  "account_email": "cerebrogym@zebro.es",
+  "instagram_user_id": "17841416147975945",
+  "secrets": {
+    "instagram_token": "IG_TOKEN_CEREBROGYM"
+  }
+}

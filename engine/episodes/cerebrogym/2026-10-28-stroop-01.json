@@ -1,0 +1,61 @@
+{
+  "brand": "cerebrogym",
+  "format": "stroop",
+  "hook": "¿Llegas al final sin fallar?",
+  "hook_highlight": [
+    "final"
+  ],
+  "sub": "Di en voz alta el COLOR de la letra, no la palabra",
+  "items": [
+    [
+      "ROJO",
+      "#3aa0ff"
+    ],
+    [
+      "VERDE",
+      "#ff4d6d"
+    ],
+    [
+      "AZUL",
+      "#ffd400"
+    ],
+    [
+      "AMARILLO",
+      "#2ee59d"
+    ],
+    [
+      "NEGRO",
+      "#ffffff"
+    ],
+    [
+      "BLANCO",
+      "#ff4d6d"
+    ],
+    [
+      "ROSA",
+      "#2ee59d"
+    ],
+    [
+      "AZUL",
+      "#ff9f1c"
+    ]
+  ],
+  "item_seconds": [
+    1.6,
+    1.5,
+    1.4,
+    1.3,
+    1.2,
+    1.1,
+    1.0,
+    1.0
+  ],
+  "reveal": "Tu cerebro lee de forma automática y esa lectura interfiere al nombrar el color. Se llama efecto Stroop.",
+  "cta": "Comenta cuántas fallaste",
+  "caption": "¿Llegaste al final sin fallar? 🎨 Di el COLOR, no la palabra. Comenta cuántas fallaste 👇 #retomental #cerebro #juegosmentales #braintraining #stroop",
+  "title": "Di el COLOR, no la palabra: ¿llegas al final?",
+  "sources": [
+    "https://doi.org/10.1037/h0054651"
+  ],
+  "reveal_seconds": 4.2
+}

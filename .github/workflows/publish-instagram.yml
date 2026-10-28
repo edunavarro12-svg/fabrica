@@ -1,0 +1,95 @@
+name: Publicar en Instagram
+# Renderiza un episodio, lo expone un momento en GitHub Pages (nombre aleatorio),
+# lo publica como Reel y retira el vídeo de Pages. Idempotente por episodio.
+on:
+  workflow_dispatch:
+    inputs:
+      episode:
+        description: 'Ruta del episodio, p. ej. engine/episodes/cerebrogym/2026-10-28-stroop-01.json'
+        required: true
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: publish-instagram
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencias de render
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg > /dev/null
+          pip install -q pillow numpy
+      - name: Render
+        env:
+          EPISODE: ${{ inputs.episode }}
+        run: |
+          set -euo pipefail
+          case "$EPISODE" in engine/episodes/*.json) ;; *) echo "::error::Ruta de episodio no válida"; exit 1;; esac
+          test -f "$EPISODE"
+          python3 engine/render.py "$EPISODE" out.mp4
+      - name: Control técnico
+        run: |
+          set -euo pipefail
+          w=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 out.mp4)
+          h=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 out.mp4)
+          d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 out.mp4)
+          echo "::notice title=QA::${w}x${h} ${d}s"
+          [ "$w" = "1080" ] && [ "$h" = "1920" ] || { echo "::error::Resolución incorrecta"; exit 1; }
+          python3 -c "import sys; d=float('$d'); sys.exit(0 if 5 <= d <= 60 else 1)" || { echo "::error::Duración fuera de rango"; exit 1; }
+          ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 out.mp4 | grep -q aac || { echo "::error::Sin audio"; exit 1; }
+      - name: Preparar sitio temporal
+        id: site
+        run: |
+          set -euo pipefail
+          name="v-$(openssl rand -hex 16).mp4"
+          mkdir -p site && cp out.mp4 "site/$name" && touch site/.nojekyll
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+          name: pages-video
+      - name: Exponer vídeo en GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: pages-video
+      - name: Esperar a que el vídeo sea accesible
+        env:
+          URL: ${{ steps.deploy.outputs.page_url }}${{ steps.site.outputs.name }}
+        run: |
+          for i in $(seq 1 30); do
+            c=$(curl -s -o /dev/null -w "%{http_code}" "$URL"); [ "$c" = "200" ] && exit 0; sleep 5
+          done
+          echo "::error::El vídeo no está accesible en Pages"; exit 1
+      - name: Publicar en Instagram
+        env:
+          EPISODE: ${{ inputs.episode }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN_CEREBROGYM }}
+          PUBLIC_VIDEO_URL: ${{ steps.deploy.outputs.page_url }}${{ steps.site.outputs.name }}
+        run: python3 engine/publish_instagram.py "$EPISODE" out.mp4
+      - name: Retirar vídeo de Pages
+        if: always() && steps.deploy.outcome == 'success'
+        run: mkdir -p empty && echo "ok" > empty/index.html
+      - uses: actions/upload-pages-artifact@v3
+        if: always() && steps.deploy.outcome == 'success'
+        with:
+          path: empty
+          name: pages-empty
+      - uses: actions/deploy-pages@v4
+        if: always() && steps.deploy.outcome == 'success'
+        with:
+          artifact_name: pages-empty
+      - name: Guardar registro
+        if: always()
+        run: |
+          git config user.name "fabrica-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add engine/ledger 2>/dev/null || true
+          git diff --cached --quiet || { git commit -m "Registro: ${{ inputs.episode }}" && git pull --rebase -q && git push -q; }
